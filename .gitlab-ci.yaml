@@ -1,0 +1,39 @@
+image: registry.cn-hangzhou.aliyuncs.com/choerodon-tools/cibase:0.5.0
+
+stages:
+  - mvn-package
+  - mvn-sonar
+
+maven-test-branches:
+  stage: mvn-package
+  script:
+    - mvn clean && mvn install -U -DskipTests=false
+  only:
+    - branches
+  except:
+    - master
+    - tags
+    - develop
+    - /^release-.*$/
+    - /^hotfix-.*$/
+
+maven-test-sonar:
+  stage: mvn-sonar
+  script:
+    - mvn clean && mvn install -U -DskipTests=false
+    - mvn --batch-mode verify sonar:sonar -Dsonar.host.url=${SONAR_URL} -Dsonar.analysis.mode=preview -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA} -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME} -Dsonar.gitlab.project_id=${CI_PROJECT_ID}
+  only:
+    - develop
+    - /^release-.*$/
+    - /^hotfix-.*$/
+    - /^feature-.*$/
+  except:
+    - tags
+
+.auto_devops: &auto_devops |
+    curl -o .auto_devops.sh \
+        "${CHOERODON_URL}/devops/ci?token=${Token}&type=lib"
+    source .auto_devops.sh
+
+before_script:
+  - *auto_devops
