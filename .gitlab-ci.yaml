@@ -4,29 +4,18 @@ stages:
   - mvn-package
   - mvn-sonar
 
-maven-test-branches:
+maven-branches:
   stage: mvn-package
   script:
     - mvn clean && mvn install -U -DskipTests=false
   only:
     - branches
-  except:
-    - master
-    - tags
-    - develop
-    - /^release-.*$/
-    - /^hotfix-.*$/
 
-maven-test-sonar:
+maven-sonar:
   stage: mvn-sonar
   script:
     - mvn clean && mvn install -U -DskipTests=false
-    - mvn --batch-mode verify sonar:sonar -Dsonar.host.url=${SONAR_URL} -Dsonar.analysis.mode=preview -Dsonar.gitlab.commit_sha=${CI_COMMIT_SHA} -Dsonar.gitlab.ref_name=${CI_COMMIT_REF_NAME} -Dsonar.gitlab.project_id=${CI_PROJECT_ID}
-  only:
-    - develop
-    - /^release-.*$/
-    - /^hotfix-.*$/
-    - /^feature-.*$/
+    - mvn --batch-mode verify sonar:sonar -Dsonar.host.url=$SONAR_URL -Dsonar.login=$SONAR_LOGIN -Dsonar.gitlab.project_id=$CI_PROJECT_PATH -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.analysis.serviceGroup=$GROUP_NAME -Dsonar.analysis.commitId=$CI_COMMIT_SHA -Dsonar.projectKey=${GROUP_NAME}:${PROJECT_NAME}
   except:
     - tags
 
